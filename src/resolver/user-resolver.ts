@@ -1,13 +1,15 @@
-import { Args, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Args, InputType, Mutation, Query, Resolver } from "type-graphql";
 import { Repository } from "typeorm";
 import { User } from "../entity/user";
+import { NewUserInput, UserArgs } from "./args/user-args";
+import { DB } from "../utils/db";
 
 @Resolver()
 export class UserResolver {
-  constructor(private userRepo: Repository<User>) {}
+  constructor(private userRepo: Repository<User> = DB.getRepository(User)) {}
 
   @Query((returns) => [User])
-  async getUsers(@Args() props: { isVerified?: boolean }) {
+  async users(@Args() props: UserArgs) {
     let where: any = {};
 
     if (props.isVerified != null) {
@@ -23,9 +25,9 @@ export class UserResolver {
   }
 
   @Query((returns) => User)
-  async getUser(@Args() props: { id: number }) {
+  async user(@Arg("id") id: number) {
     const user = await this.userRepo.findOne({
-      where: { id: props.id },
+      where: { id },
       relations: ["posts"],
     });
 
@@ -33,7 +35,7 @@ export class UserResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async createUser(@Args() props: User) {
+  async createUser(@Arg("newUser") props: NewUserInput) {
     const user = await this.userRepo.save({
       name: props.name,
       email: props.email,

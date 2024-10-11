@@ -7,7 +7,7 @@ const schema = buildSchemaSync({
   resolvers: [UserResolver],
 });
 
-const typeGraphQLRouter = Router();
+export const typeGraphQLRouter = Router();
 
 typeGraphQLRouter.post(
   "/typegraphql",
