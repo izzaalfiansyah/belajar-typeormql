@@ -6,7 +6,7 @@ import { DB } from "../utils/db";
 
 @Resolver()
 export class UserResolver {
-  constructor(private userRepo: Repository<User> = DB.getRepository(User)) {}
+  constructor(public userRepo: Repository<User> = DB.getRepository(User)) {}
 
   @Query((returns) => [User])
   async users(@Args() props: UserArgs): Promise<User[]> {
