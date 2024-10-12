@@ -9,11 +9,9 @@ import {
 } from "type-graphql";
 import { Post } from "../entity/post";
 import { PostArgs, PostInput } from "./args/post-args";
-import { Repository } from "typeorm";
-import { DB } from "../utils/db";
-import { UserResolver } from "./user-resolver";
 import { User } from "../entity/user";
 import DataLoader from "dataloader";
+import { PostLike } from "../entity/post-like";
 
 const userLoader = new DataLoader(async (userIds: readonly number[]) => {
   const users = await User.createQueryBuilder("user")
@@ -25,17 +23,25 @@ const userLoader = new DataLoader(async (userIds: readonly number[]) => {
   return userIds.map((id) => users.find((user) => user.id == id));
 });
 
+const likeLoader = new DataLoader(async (ids: readonly number[]) => {
+  const likes = await PostLike.createQueryBuilder("like")
+    .where("like.postId IN (:...postIds)", {
+      postIds: ids,
+    })
+    .getMany();
+
+  return ids.map((id) => likes.filter((like) => like.postId == id));
+});
+
 @Resolver(() => Post)
 export class PostResolver {
-  constructor(public postRepo: Repository<Post> = DB.getRepository(Post)) {}
-
   @Query((returns) => [Post])
   async posts(@Args() args: PostArgs): Promise<Post[]> {
     let where: PostArgs = {};
     where.isPublished = args.isPublished;
     where.userId = args.userId;
 
-    const posts = await this.postRepo.find({
+    const posts = await Post.find({
       where,
       relations: ["likes"],
     });
@@ -45,7 +51,7 @@ export class PostResolver {
 
   @Query((returns) => Post)
   async post(@Arg("id") id: number): Promise<Post | null> {
-    const post = await this.postRepo.findOne({
+    const post = await Post.findOne({
       where: {
         id,
       },
@@ -57,14 +63,13 @@ export class PostResolver {
 
   @Mutation((returns) => Boolean)
   async createPost(@Arg("postInput") props: PostInput): Promise<boolean> {
-    const userResolver = new UserResolver();
-    const user = await userResolver.userRepo.findOneBy({ id: props.userId });
+    const user = await User.findOneBy({ id: props.userId });
 
     if (!user) {
       return false;
     }
 
-    const post = await this.postRepo.save({
+    const post = await Post.save({
       ...props,
       user: user,
     });
@@ -74,14 +79,14 @@ export class PostResolver {
 
   @Mutation((returns) => Boolean)
   async deletePost(@Arg("id") id: number): Promise<boolean> {
-    const res = this.postRepo.delete({ id });
+    const res = Post.delete({ id });
 
     return !!res;
   }
 
   @Mutation((returns) => Boolean)
   async publishPost(@Arg("id") id: number): Promise<boolean> {
-    const res = this.postRepo.update(
+    const res = Post.update(
       {
         id,
       },
@@ -95,7 +100,7 @@ export class PostResolver {
 
   @Mutation((returns) => Boolean)
   async unPublishPost(@Arg("id") id: number): Promise<boolean> {
-    const res = this.postRepo.update(
+    const res = Post.update(
       {
         id,
       },
@@ -110,5 +115,10 @@ export class PostResolver {
   @FieldResolver(() => User)
   async user(@Root() post: Post): Promise<User | undefined> {
     return userLoader.load(post.userId);
+  }
+
+  @FieldResolver(() => [PostLike])
+  async likes(@Root() post: Post): Promise<PostLike[]> {
+    return likeLoader.load(post.id);
   }
 }

@@ -25,8 +25,6 @@ const postLoader = new DataLoader(async (userIds: readonly number[]) => {
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(public userRepo: Repository<User> = DB.getRepository(User)) {}
-
   @Query((returns) => [User])
   async users(@Args() props: UserArgs): Promise<User[]> {
     let where: any = {};
@@ -35,7 +33,7 @@ export class UserResolver {
       where.isVerified = props.isVerified;
     }
 
-    const users = await this.userRepo.find({
+    const users = await User.find({
       where,
     });
 
@@ -44,7 +42,7 @@ export class UserResolver {
 
   @Query((returns) => User)
   async user(@Arg("id") id: number, @Root() post: Post): Promise<User | null> {
-    const user = await this.userRepo.findOne({
+    const user = await User.findOne({
       where: { id },
     });
 
@@ -53,7 +51,7 @@ export class UserResolver {
 
   @Mutation((returns) => Boolean)
   async createUser(@Arg("userInput") props: UserInput): Promise<boolean> {
-    const user = await this.userRepo.save({
+    const user = await User.save({
       name: props.name,
       email: props.email,
     });
@@ -66,7 +64,7 @@ export class UserResolver {
     @Arg("id") id: number,
     @Arg("userInput") props: UserInput
   ): Promise<boolean> {
-    const user = await this.userRepo.findOneBy({ id });
+    const user = await User.findOneBy({ id });
 
     if (!user) {
       return false;
@@ -75,14 +73,14 @@ export class UserResolver {
     user.name = props.name;
     user.email = props.email;
 
-    const res = await this.userRepo.save(user);
+    const res = await User.save(user);
 
     return !!res;
   }
 
   @Mutation((returns) => Boolean)
   async deleteUser(@Arg("id") id: number): Promise<boolean> {
-    const res = await this.userRepo.delete({
+    const res = await User.delete({
       id,
     });
 
@@ -91,7 +89,7 @@ export class UserResolver {
 
   @Mutation((returns) => Boolean)
   async verifyUser(@Arg("id") id: number): Promise<boolean> {
-    const user = await this.userRepo.findOneBy({ id });
+    const user = await User.findOneBy({ id });
 
     if (!user) {
       return false;
@@ -99,7 +97,7 @@ export class UserResolver {
 
     user.isVerified = true;
 
-    const res = await this.userRepo.save(user);
+    const res = await User.save(user);
 
     return !!res;
   }

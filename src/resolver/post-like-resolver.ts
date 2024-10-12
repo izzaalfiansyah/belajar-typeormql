@@ -5,6 +5,8 @@ import { PostLike } from "../entity/post-like";
 import { DB } from "../utils/db";
 import { UserResolver } from "./user-resolver";
 import { PostResolver } from "./post-resolver";
+import { Post } from "../entity/post";
+import { User } from "../entity/user";
 
 @Resolver()
 export class PostLikeResolver {
@@ -14,11 +16,8 @@ export class PostLikeResolver {
 
   @Mutation((returns) => Boolean)
   async likePost(@Arg("likeInput") props: PostLikeInput): Promise<boolean> {
-    const userRepo = new UserResolver().userRepo;
-    const postRepo = new PostResolver().postRepo;
-
-    const user = await userRepo.findOneBy({ id: props.userId });
-    const post = await postRepo.findOneBy({ id: props.postId });
+    const user = await User.findOneBy({ id: props.userId });
+    const post = await Post.findOneBy({ id: props.postId });
 
     if (!user || !post) {
       return false;
