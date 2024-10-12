@@ -8,7 +8,7 @@ export class UserArgs {
 }
 
 @InputType()
-export class NewUserInput {
+export class UserInput {
   @Field()
   @MaxLength(50)
   name: string;
