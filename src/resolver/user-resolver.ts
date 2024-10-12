@@ -12,6 +12,16 @@ import { User } from "../entity/user";
 import { UserInput, UserArgs } from "./args/user-args";
 import { DB } from "../utils/db";
 import { Post } from "../entity/post";
+import DataLoader from "dataloader";
+
+const postLoader = new DataLoader(async (userIds: readonly number[]) => {
+  const posts = await Post.createQueryBuilder("post")
+    .where("post.userId IN (:...ids)", {
+      ids: userIds,
+    })
+    .getMany();
+  return userIds.map((userId) => posts.filter((post) => post.userId == userId));
+});
 
 @Resolver(() => User)
 export class UserResolver {
@@ -96,12 +106,6 @@ export class UserResolver {
 
   @FieldResolver(() => [Post])
   async posts(@Root() user: User): Promise<Post[]> {
-    const posts = await Post.find({
-      where: {
-        user: user,
-      },
-    });
-
-    return posts;
+    return postLoader.load(user.id);
   }
 }

@@ -13,6 +13,17 @@ import { Repository } from "typeorm";
 import { DB } from "../utils/db";
 import { UserResolver } from "./user-resolver";
 import { User } from "../entity/user";
+import DataLoader from "dataloader";
+
+const userLoader = new DataLoader(async (userIds: readonly number[]) => {
+  const users = await User.createQueryBuilder("user")
+    .where("user.id IN (:...ids)", {
+      ids: userIds,
+    })
+    .getMany();
+
+  return userIds.map((id) => users.find((user) => user.id == id));
+});
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -97,11 +108,7 @@ export class PostResolver {
   }
 
   @FieldResolver(() => User)
-  async user(@Root() post: Post): Promise<User> {
-    const user = await User.findOneBy({
-      id: post.userId,
-    });
-
-    return user!;
+  async user(@Root() post: Post): Promise<User | undefined> {
+    return userLoader.load(post.userId);
   }
 }
