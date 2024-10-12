@@ -22,7 +22,7 @@ export class PostLike extends BaseEntity {
   postId: number;
 
   @ManyToOne(() => Post, (post) => post.likes)
-  @Field((type) => [Post])
+  @Field((type) => Post)
   @JoinColumn()
   post: Post;
 
@@ -30,8 +30,8 @@ export class PostLike extends BaseEntity {
   @Column("integer")
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.likes)
-  @Field((type) => [User])
+  @ManyToOne(() => User, (user) => user.postLikes)
+  @Field((type) => User)
   @JoinColumn()
   user: User;
 

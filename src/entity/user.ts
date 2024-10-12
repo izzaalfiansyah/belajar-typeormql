@@ -36,5 +36,5 @@ export class User extends BaseEntity {
 
   @Field((type) => [PostLike])
   @OneToMany(() => PostLike, (like) => like.user)
-  likes: PostLike[];
+  postLikes: PostLike[];
 }

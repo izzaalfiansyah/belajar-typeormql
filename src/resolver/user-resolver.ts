@@ -7,20 +7,29 @@ import {
   Resolver,
   Root,
 } from "type-graphql";
-import { Repository } from "typeorm";
 import { User } from "../entity/user";
 import { UserInput, UserArgs } from "./args/user-args";
-import { DB } from "../utils/db";
 import { Post } from "../entity/post";
 import DataLoader from "dataloader";
+import { PostLike } from "../entity/post-like";
 
-const postLoader = new DataLoader(async (userIds: readonly number[]) => {
+const postLoader = new DataLoader(async (ids: readonly number[]) => {
   const posts = await Post.createQueryBuilder("post")
     .where("post.userId IN (:...ids)", {
-      ids: userIds,
+      ids,
     })
     .getMany();
-  return userIds.map((userId) => posts.filter((post) => post.userId == userId));
+  return ids.map((id) => posts.filter((post) => post.userId == id));
+});
+
+const postLikesLoader = new DataLoader(async (ids: readonly number[]) => {
+  const postLikes = await PostLike.createQueryBuilder("like")
+    .where("like.userId IN (:...ids)", {
+      ids,
+    })
+    .getMany();
+
+  return ids.map((id) => postLikes.filter((postLike) => postLike.userId == id));
 });
 
 @Resolver(() => User)
@@ -105,5 +114,10 @@ export class UserResolver {
   @FieldResolver(() => [Post])
   async posts(@Root() user: User): Promise<Post[]> {
     return postLoader.load(user.id);
+  }
+
+  @FieldResolver(() => [PostLike])
+  async postLikes(@Root() user: User): Promise<PostLike[]> {
+    return postLikesLoader.load(user.id);
   }
 }

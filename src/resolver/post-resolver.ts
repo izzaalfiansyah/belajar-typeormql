@@ -43,7 +43,6 @@ export class PostResolver {
 
     const posts = await Post.find({
       where,
-      relations: ["likes"],
     });
 
     return posts;
@@ -55,7 +54,6 @@ export class PostResolver {
       where: {
         id,
       },
-      relations: ["likes"],
     });
 
     return post;
