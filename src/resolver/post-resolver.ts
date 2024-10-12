@@ -1,11 +1,20 @@
-import { Arg, Args, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Args,
+  FieldResolver,
+  Mutation,
+  Query,
+  Resolver,
+  Root,
+} from "type-graphql";
 import { Post } from "../entity/post";
 import { PostArgs, PostInput } from "./args/post-args";
 import { Repository } from "typeorm";
 import { DB } from "../utils/db";
 import { UserResolver } from "./user-resolver";
+import { User } from "../entity/user";
 
-@Resolver()
+@Resolver(() => Post)
 export class PostResolver {
   constructor(public postRepo: Repository<Post> = DB.getRepository(Post)) {}
 
@@ -17,7 +26,7 @@ export class PostResolver {
 
     const posts = await this.postRepo.find({
       where,
-      relations: ["user", "likes"],
+      relations: ["likes"],
     });
 
     return posts;
@@ -29,7 +38,7 @@ export class PostResolver {
       where: {
         id,
       },
-      relations: ["user", "likes"],
+      relations: ["likes"],
     });
 
     return post;
@@ -85,5 +94,14 @@ export class PostResolver {
     );
 
     return !!res;
+  }
+
+  @FieldResolver(() => User)
+  async user(@Root() post: Post): Promise<User> {
+    const user = await User.findOneBy({
+      id: post.userId,
+    });
+
+    return user!;
   }
 }

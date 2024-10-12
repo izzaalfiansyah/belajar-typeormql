@@ -1,6 +1,8 @@
 import {
+  BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -11,7 +13,7 @@ import { PostLike } from "./post-like";
 
 @ObjectType()
 @Entity()
-export class Post {
+export class Post extends BaseEntity {
   @Field((type) => ID)
   @PrimaryGeneratedColumn()
   id: number;
@@ -30,8 +32,13 @@ export class Post {
   })
   isPublished: boolean;
 
+  @Field(() => ID)
+  @Column("integer")
+  userId: number;
+
   @Field((type) => User)
   @ManyToOne(() => User, (user) => user.posts)
+  @JoinColumn()
   user: User;
 
   @Field((type) => [PostLike])

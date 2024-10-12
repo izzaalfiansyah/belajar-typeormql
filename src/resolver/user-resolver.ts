@@ -1,10 +1,19 @@
-import { Arg, Args, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Args,
+  FieldResolver,
+  Mutation,
+  Query,
+  Resolver,
+  Root,
+} from "type-graphql";
 import { Repository } from "typeorm";
 import { User } from "../entity/user";
 import { UserInput, UserArgs } from "./args/user-args";
 import { DB } from "../utils/db";
+import { Post } from "../entity/post";
 
-@Resolver()
+@Resolver(() => User)
 export class UserResolver {
   constructor(public userRepo: Repository<User> = DB.getRepository(User)) {}
 
@@ -18,17 +27,15 @@ export class UserResolver {
 
     const users = await this.userRepo.find({
       where,
-      relations: ["posts"],
     });
 
     return users;
   }
 
   @Query((returns) => User)
-  async user(@Arg("id") id: number): Promise<User | null> {
+  async user(@Arg("id") id: number, @Root() post: Post): Promise<User | null> {
     const user = await this.userRepo.findOne({
       where: { id },
-      relations: ["posts"],
     });
 
     return user;
@@ -85,5 +92,16 @@ export class UserResolver {
     const res = await this.userRepo.save(user);
 
     return !!res;
+  }
+
+  @FieldResolver(() => [Post])
+  async posts(@Root() user: User): Promise<Post[]> {
+    const posts = await Post.find({
+      where: {
+        user: user,
+      },
+    });
+
+    return posts;
   }
 }
