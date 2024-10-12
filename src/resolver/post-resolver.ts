@@ -7,9 +7,7 @@ import { UserResolver } from "./user-resolver";
 
 @Resolver()
 export class PostResolver {
-  constructor(private postRepo: Repository<Post>) {
-    this.postRepo = DB.getRepository(Post);
-  }
+  constructor(public postRepo: Repository<Post> = DB.getRepository(Post)) {}
 
   @Query((returns) => [Post])
   async posts(@Args() args: PostArgs): Promise<Post[]> {
