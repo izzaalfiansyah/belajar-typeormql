@@ -17,7 +17,7 @@ export class PostResolver {
 
     const posts = await this.postRepo.find({
       where,
-      relations: ["user"],
+      relations: ["user", "likes"],
     });
 
     return posts;
@@ -29,7 +29,7 @@ export class PostResolver {
       where: {
         id,
       },
-      relations: ["user"],
+      relations: ["user", "likes"],
     });
 
     return post;
