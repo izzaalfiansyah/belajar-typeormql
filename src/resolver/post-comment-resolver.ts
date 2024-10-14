@@ -53,6 +53,10 @@ const parentLoader = new DataLoader(async (parentIds) => {
 export class PostCommentResolver {
   @Query(() => [PostComment])
   async postComments(): Promise<PostComment[]> {
+    // const postComments = await DB.manager
+    //   .getTreeRepository(PostComment)
+    //   .findTrees();
+
     const postComments = await DB.manager
       .getTreeRepository(PostComment)
       .findRoots();
