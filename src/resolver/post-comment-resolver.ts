@@ -29,13 +29,33 @@ const userLoader = new DataLoader(async (userIds) => {
   return userIds.map((userId) => users.find((user) => user.id == userId));
 });
 
+const childrenLoader = new DataLoader(async (parentIds) => {
+  const comments = await PostComment.createQueryBuilder("comment")
+    .where("comment.parentId IN (:...parentIds)", { parentIds })
+    .getMany();
+
+  return parentIds.map((parentId) =>
+    comments.filter((comment) => comment.parentId == parentId)
+  );
+});
+
+const parentLoader = new DataLoader(async (parentIds) => {
+  const comments = await PostComment.createQueryBuilder("comment")
+    .where("comment.id IN (:...parentIds)", { parentIds })
+    .getMany();
+
+  return parentIds.map((parentId) =>
+    comments.find((comment) => comment.id == parentId)
+  );
+});
+
 @Resolver(() => PostComment)
 export class PostCommentResolver {
   @Query(() => [PostComment])
   async postComments(): Promise<PostComment[]> {
     const postComments = await DB.manager
       .getTreeRepository(PostComment)
-      .findTrees();
+      .findRoots();
 
     return postComments;
   }
@@ -84,5 +104,15 @@ export class PostCommentResolver {
   @FieldResolver(() => User)
   async user(@Root() comment: PostComment): Promise<User> {
     return userLoader.load(comment.userId) as Promise<User>;
+  }
+
+  @FieldResolver(() => [PostComment])
+  async children(@Root() comment: PostComment): Promise<PostComment[]> {
+    return childrenLoader.load(comment.id);
+  }
+
+  @FieldResolver(() => PostComment, { nullable: true })
+  async parent(@Root() comment: PostComment): Promise<PostComment | undefined> {
+    return parentLoader.load(comment.parentId);
   }
 }

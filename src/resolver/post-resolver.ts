@@ -12,6 +12,8 @@ import { PostArgs, PostInput } from "./args/post-args";
 import { User } from "../entity/user";
 import DataLoader from "dataloader";
 import { PostLike } from "../entity/post-like";
+import { PostComment } from "../entity/post-comment";
+import { DB } from "../utils/db";
 
 const userLoader = new DataLoader(async (userIds: readonly number[]) => {
   const users = await User.createQueryBuilder("user")
@@ -31,6 +33,16 @@ const likeLoader = new DataLoader(async (ids: readonly number[]) => {
     .getMany();
 
   return ids.map((id) => likes.filter((like) => like.postId == id));
+});
+
+const commentLoader = new DataLoader(async (ids) => {
+  const comments = await PostComment.createQueryBuilder("comment")
+    .where("comment.postId IN (:...postIds)", {
+      postIds: ids,
+    })
+    .getMany();
+
+  return ids.map((id) => comments.filter((comment) => comment.postId == id));
 });
 
 @Resolver(() => Post)
@@ -118,5 +130,10 @@ export class PostResolver {
   @FieldResolver(() => [PostLike])
   async likes(@Root() post: Post): Promise<PostLike[]> {
     return likeLoader.load(post.id);
+  }
+
+  @FieldResolver(() => [PostComment])
+  async comments(@Root() post: Post): Promise<PostComment[]> {
+    return commentLoader.load(post.id);
   }
 }

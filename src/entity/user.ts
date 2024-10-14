@@ -39,7 +39,7 @@ export class User extends BaseEntity {
   @OneToMany(() => PostLike, (like) => like.user)
   postLikes: PostLike[];
 
-  @Field(() => [PostComment])
+  // @Field(() => [PostComment])
   @OneToMany(() => PostComment, (comment) => comment.user)
   postComments: PostComment[];
 }

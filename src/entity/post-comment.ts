@@ -34,11 +34,15 @@ export class PostComment extends BaseEntity {
 
   @Column("int")
   @Field(() => ID)
-  userId?: number;
+  userId: number;
 
   @ManyToOne(() => User, (user) => user.postComments)
   @Field(() => User)
   user: User;
+
+  @Column("int", { nullable: true })
+  @Field(() => ID, { nullable: true })
+  parentId?: number;
 
   @TreeParent({ onDelete: "CASCADE" })
   @Field(() => PostComment, { nullable: true })
