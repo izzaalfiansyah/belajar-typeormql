@@ -10,6 +10,7 @@ import {
 import { User } from "./user";
 import { Field, ID, ObjectType } from "type-graphql";
 import { PostLike } from "./post-like";
+import { PostComment } from "./post-comment";
 
 @ObjectType()
 @Entity()
@@ -44,4 +45,8 @@ export class Post extends BaseEntity {
   @Field((type) => [PostLike])
   @OneToMany(() => PostLike, (like) => like.post)
   likes: PostLike[];
+
+  @Field(() => [PostComment])
+  @OneToMany(() => PostComment, (comment) => comment.post)
+  comments: PostComment[];
 }

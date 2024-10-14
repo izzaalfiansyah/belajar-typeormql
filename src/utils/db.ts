@@ -2,6 +2,7 @@ import { DataSource } from "typeorm";
 import { User } from "../entity/user";
 import { Post } from "../entity/post";
 import { PostLike } from "../entity/post-like";
+import { PostComment } from "../entity/post-comment";
 
 export const DB = new DataSource({
   host: (process.env.DB_HOST as any) || "localhost",
@@ -9,7 +10,7 @@ export const DB = new DataSource({
   username: process.env.DB_USER || "root",
   password: process.env.DB_PASS || "",
   database: process.env.DB_NAME || "test",
-  entities: [User, Post, PostLike],
+  entities: [User, Post, PostLike, PostComment],
   synchronize: true,
   logging: true,
 });
