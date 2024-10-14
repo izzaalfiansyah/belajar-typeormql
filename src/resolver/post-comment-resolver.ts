@@ -67,6 +67,15 @@ export class PostCommentResolver {
     return !!postComment;
   }
 
+  @Mutation(() => Boolean)
+  async deletePostComment(@Arg("id") id: number) {
+    const res = await PostComment.delete({
+      id,
+    });
+
+    return !!res.affected;
+  }
+
   @FieldResolver(() => Post)
   async post(@Root() comment: PostComment): Promise<Post | undefined> {
     return postLoader.load(comment.postId);
