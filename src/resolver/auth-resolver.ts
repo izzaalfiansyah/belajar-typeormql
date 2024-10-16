@@ -28,16 +28,19 @@ export class AuthResolver {
   }
 
   @Authorized()
+  @Mutation(() => Boolean)
+  async logout(@Ctx() ctx: AppContext): Promise<boolean> {
+    ctx.req.session.destroy((err) => {
+      console.log(err);
+    });
+    ctx.res.clearCookie("gql");
+
+    return true;
+  }
+
+  @Authorized()
   @Query(() => User)
   async profile(@Ctx() ctx: AppContext): Promise<User | undefined> {
-    const user = await User.findOne({
-      where: { id: (ctx.req.session as any).userId },
-    });
-
-    if (!user) {
-      return undefined;
-    }
-
-    return user;
+    return ctx.user;
   }
 }

@@ -6,6 +6,7 @@ import { getSchema } from "./utils/graphql";
 import session from "express-session";
 import { redis } from "./utils/redis";
 import RedisStore from "connect-redis";
+import { User } from "./entity/user";
 
 export async function runApp() {
   const app = express();
@@ -19,6 +20,7 @@ export async function runApp() {
 
   app.use(
     session({
+      name: "gql",
       store: redisStore,
       secret: "itsjustsecret",
       resave: false,
@@ -40,9 +42,15 @@ export async function runApp() {
     "/graphql",
     express.json(),
     expressMiddleware(apolloServer, {
-      context: ({ req }) => {
+      context: async ({ req, res }) => {
+        const user = await User.findOne({
+          where: { id: (req.session as any).userId },
+        });
+
         return {
           req,
+          res,
+          user,
         } as any;
       },
     }) as any
