@@ -25,6 +25,12 @@ export class User extends BaseEntity {
   @Column()
   email: string;
 
+  @Column({
+    default: "$2b$12$DH0uNYgyj9GOaQFh0f/MR.YAXXndWwxps/Ybb6T92ITViqEDusyW.",
+    // 12345678
+  })
+  password: string;
+
   @Field((type) => Boolean)
   @Column({
     default: false,
@@ -39,7 +45,7 @@ export class User extends BaseEntity {
   @OneToMany(() => PostLike, (like) => like.user)
   postLikes: PostLike[];
 
-  // @Field(() => [PostComment])
+  @Field(() => [PostComment])
   @OneToMany(() => PostComment, (comment) => comment.user)
   postComments: PostComment[];
 }

@@ -1,4 +1,4 @@
-import { IsEmail, MaxLength } from "class-validator";
+import { IsEmail, IsStrongPassword, MaxLength } from "class-validator";
 import { ArgsType, Field, InputType } from "type-graphql";
 
 @ArgsType()
@@ -16,4 +16,8 @@ export class UserInput {
   @Field()
   @IsEmail()
   email: string;
+
+  @Field()
+  // @IsStrongPassword()
+  password: string;
 }

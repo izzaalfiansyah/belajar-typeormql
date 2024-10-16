@@ -51,23 +51,20 @@ const parentLoader = new DataLoader(async (parentIds) => {
 
 @Resolver(() => PostComment)
 export class PostCommentResolver {
-  @Query(() => [PostComment])
-  async postComments(): Promise<PostComment[]> {
-    // const postComments = await DB.manager
-    //   .getTreeRepository(PostComment)
-    //   .findTrees();
+  // @Query(() => [PostComment])
+  // async postComments(): Promise<PostComment[]> {
+  //   // const postComments = await DB.manager
+  //   //   .getTreeRepository(PostComment)
+  //   //   .findTrees();
 
-    const postComments = await DB.manager
-      .getTreeRepository(PostComment)
-      .findRoots();
+  //   const postComments = await DB.manager
+  //     .getTreeRepository(PostComment)
+  //     .findRoots();
 
-    return postComments;
-  }
-
+  //   return postComments;
+  // }
   @Mutation(() => Boolean)
-  async createPostComment(
-    @Arg("input") input: PostCommentInput
-  ): Promise<boolean> {
+  async commentPost(@Arg("input") input: PostCommentInput): Promise<boolean> {
     const post = await Post.createQueryBuilder("post")
       .where("post.id = :id", { id: input.postId })
       .getOne();
@@ -92,7 +89,7 @@ export class PostCommentResolver {
   }
 
   @Mutation(() => Boolean)
-  async deletePostComment(@Arg("id") id: number) {
+  async unCommentPost(@Arg("id") id: number) {
     const res = await PostComment.delete({
       id,
     });
