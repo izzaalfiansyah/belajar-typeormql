@@ -10,40 +10,11 @@ import {
 import { Post } from "../entity/post";
 import { PostArgs, PostInput } from "./args/post-args";
 import { User } from "../entity/user";
-import DataLoader from "dataloader";
 import { PostLike } from "../entity/post-like";
 import { PostComment } from "../entity/post-comment";
-import { DB } from "../utils/db";
-
-const userLoader = new DataLoader(async (userIds: readonly number[]) => {
-  const users = await User.createQueryBuilder("user")
-    .where("user.id IN (:...ids)", {
-      ids: userIds,
-    })
-    .getMany();
-
-  return userIds.map((id) => users.find((user) => user.id == id));
-});
-
-const likeLoader = new DataLoader(async (ids: readonly number[]) => {
-  const likes = await PostLike.createQueryBuilder("like")
-    .where("like.postId IN (:...postIds)", {
-      postIds: ids,
-    })
-    .getMany();
-
-  return ids.map((id) => likes.filter((like) => like.postId == id));
-});
-
-const commentLoader = new DataLoader(async (ids) => {
-  const comments = await PostComment.createQueryBuilder("comment")
-    .where("comment.postId IN (:...postIds)", {
-      postIds: ids,
-    })
-    .getMany();
-
-  return ids.map((id) => comments.filter((comment) => comment.postId == id));
-});
+import { userLoader } from "./loader/user-loader";
+import { postLikesLoaderByPostId } from "./loader/post-likes-loader";
+import { postCommentsLoaderByPostId } from "./loader/post-comments-loader";
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -129,11 +100,11 @@ export class PostResolver {
 
   @FieldResolver(() => [PostLike])
   async likes(@Root() post: Post): Promise<PostLike[]> {
-    return likeLoader.load(post.id);
+    return postLikesLoaderByPostId.load(post.id);
   }
 
   @FieldResolver(() => [PostComment])
   async comments(@Root() post: Post): Promise<PostComment[]> {
-    return commentLoader.load(post.id);
+    return postCommentsLoaderByPostId.load(post.id);
   }
 }

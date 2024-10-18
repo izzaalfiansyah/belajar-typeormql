@@ -1,33 +1,11 @@
-import {
-  Arg,
-  FieldResolver,
-  Mutation,
-  Query,
-  Resolver,
-  Root,
-} from "type-graphql";
+import { Arg, FieldResolver, Mutation, Resolver, Root } from "type-graphql";
 import { PostComment } from "../entity/post-comment";
 import { Post } from "../entity/post";
 import DataLoader from "dataloader";
 import { PostCommentInput } from "./args/post-comment-args";
-import { DB } from "../utils/db";
 import { User } from "../entity/user";
-
-const postLoader = new DataLoader(async (postIds) => {
-  const posts = await Post.createQueryBuilder("post")
-    .where("post.id IN (:...postIds)", { postIds })
-    .getMany();
-
-  return postIds.map((postId) => posts.find((post) => post.id == postId));
-});
-
-const userLoader = new DataLoader(async (userIds) => {
-  const users = await User.createQueryBuilder("user")
-    .where("user.id IN (:...userIds)", { userIds })
-    .getMany();
-
-  return userIds.map((userId) => users.find((user) => user.id == userId));
-});
+import { postLoader } from "./loader/post-loader";
+import { userLoader } from "./loader/user-loader";
 
 const childrenLoader = new DataLoader(async (parentIds) => {
   const comments = await PostComment.createQueryBuilder("comment")
@@ -51,18 +29,6 @@ const parentLoader = new DataLoader(async (parentIds) => {
 
 @Resolver(() => PostComment)
 export class PostCommentResolver {
-  // @Query(() => [PostComment])
-  // async postComments(): Promise<PostComment[]> {
-  //   // const postComments = await DB.manager
-  //   //   .getTreeRepository(PostComment)
-  //   //   .findTrees();
-
-  //   const postComments = await DB.manager
-  //     .getTreeRepository(PostComment)
-  //     .findRoots();
-
-  //   return postComments;
-  // }
   @Mutation(() => Boolean)
   async commentPost(@Arg("input") input: PostCommentInput): Promise<boolean> {
     const post = await Post.createQueryBuilder("post")
@@ -99,7 +65,7 @@ export class PostCommentResolver {
 
   @FieldResolver(() => Post)
   async post(@Root() comment: PostComment): Promise<Post | undefined> {
-    return postLoader.load(comment.postId);
+    return postLoader.load(comment.postId as any);
   }
 
   @FieldResolver(() => User)

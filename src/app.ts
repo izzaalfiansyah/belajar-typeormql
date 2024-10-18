@@ -7,6 +7,12 @@ import session from "express-session";
 import { redis } from "./utils/redis";
 import RedisStore from "connect-redis";
 import { User } from "./entity/user";
+import { PubSub } from "graphql-subscriptions";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+
+export const pubSub = new PubSub();
 
 export async function runApp() {
   const app = express();
@@ -51,12 +57,21 @@ export async function runApp() {
           req,
           res,
           user,
+          pubSub,
         } as any;
       },
     }) as any
   );
 
-  app.listen(port, () => {
+  const http = createServer(app);
+
+  const ws = new WebSocketServer({
+    server: http,
+  });
+
+  useServer({ schema }, ws);
+
+  http.listen(port, () => {
     console.log("app running at port " + port);
   });
 }

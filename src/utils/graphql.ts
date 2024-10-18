@@ -4,6 +4,9 @@ import { PostResolver } from "../resolver/post-resolver";
 import { PostLikeResolver } from "../resolver/post-like-resolver";
 import { PostCommentResolver } from "../resolver/post-comment-resolver";
 import { AuthResolver } from "../resolver/auth-resolver";
+import { PubSub } from "graphql-subscriptions";
+
+export const pubSub = new PubSub();
 
 export const getSchema = async () => {
   return await buildSchema({
@@ -14,6 +17,7 @@ export const getSchema = async () => {
       PostCommentResolver,
       AuthResolver,
     ],
+    pubSub: pubSub as any,
     authChecker: async ({ context: { req } }) => {
       if (!req.session.userId) {
         return false;

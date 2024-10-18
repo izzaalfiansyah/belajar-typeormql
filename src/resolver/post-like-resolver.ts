@@ -1,34 +1,27 @@
-import { Arg, FieldResolver, Mutation, Resolver, Root } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  FieldResolver,
+  Mutation,
+  Resolver,
+  Root,
+  Subscription,
+} from "type-graphql";
 import { PostLikeInput } from "./args/post-like-args";
 import { PostLike } from "../entity/post-like";
 import { Post } from "../entity/post";
 import { User } from "../entity/user";
-import DataLoader from "dataloader";
-
-const userLoader = new DataLoader(async (userIds: readonly number[]) => {
-  const users = await User.createQueryBuilder("user")
-    .where("user.id IN (:...userIds)", {
-      userIds,
-    })
-    .getMany();
-
-  return userIds.map((userId) => users.find((user) => user.id == userId));
-});
-
-const postLoader = new DataLoader(async (postIds: readonly number[]) => {
-  const posts = await Post.createQueryBuilder("post")
-    .where("post.id IN (:...postIds)", {
-      postIds,
-    })
-    .getMany();
-
-  return postIds.map((postId) => posts.find((post) => post.id == postId));
-});
+import { AppContext } from "../types/app-context";
+import { userLoader } from "./loader/user-loader";
+import { postLoader } from "./loader/post-loader";
 
 @Resolver(() => PostLike)
 export class PostLikeResolver {
   @Mutation((returns) => Boolean)
-  async likePost(@Arg("likeInput") props: PostLikeInput): Promise<boolean> {
+  async likePost(
+    @Arg("likeInput") props: PostLikeInput,
+    @Ctx() ctx: AppContext
+  ): Promise<boolean> {
     const user = await User.findOneBy({ id: props.userId });
     const post = await Post.findOneBy({ id: props.postId });
 
@@ -41,6 +34,10 @@ export class PostLikeResolver {
     postLike.post = post;
 
     const res = await PostLike.save(postLike);
+
+    if (!!res) {
+      ctx.pubSub.publish("POST_LIKED", res);
+    }
 
     return !!res;
   }
@@ -66,5 +63,12 @@ export class PostLikeResolver {
   @FieldResolver(() => Post)
   async post(@Root() like: PostLike): Promise<Post | undefined> {
     return postLoader.load(like.postId);
+  }
+
+  @Subscription(() => PostLike, {
+    topics: "POST_LIKED",
+  })
+  async postLiked(@Root() postLike: PostLike): Promise<PostLike | undefined> {
+    return postLike;
   }
 }

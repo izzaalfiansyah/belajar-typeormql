@@ -10,38 +10,11 @@ import {
 import { User } from "../entity/user";
 import { UserInput, UserArgs } from "./args/user-args";
 import { Post } from "../entity/post";
-import DataLoader from "dataloader";
 import { PostLike } from "../entity/post-like";
 import { PostComment } from "../entity/post-comment";
-
-const postLoader = new DataLoader(async (ids: readonly number[]) => {
-  const posts = await Post.createQueryBuilder("post")
-    .where("post.userId IN (:...ids)", {
-      ids,
-    })
-    .getMany();
-  return ids.map((id) => posts.filter((post) => post.userId == id));
-});
-
-const postLikesLoader = new DataLoader(async (ids: readonly number[]) => {
-  const postLikes = await PostLike.createQueryBuilder("like")
-    .where("like.userId IN (:...ids)", {
-      ids,
-    })
-    .getMany();
-
-  return ids.map((id) => postLikes.filter((postLike) => postLike.userId == id));
-});
-
-const postCommentsLoader = new DataLoader(async (ids) => {
-  const postComments = await PostComment.createQueryBuilder("comment")
-    .where("comment.userId IN (:...ids)", { ids })
-    .getMany();
-
-  return ids.map((id) =>
-    postComments.filter((comment) => comment.userId == id)
-  );
-});
+import { postsLoaderByUserId } from "./loader/post-loader";
+import { postLikesLoaderByUserId } from "./loader/post-likes-loader";
+import { postCommentsLoaderByUserId } from "./loader/post-comments-loader";
 
 @Resolver(() => User)
 export class UserResolver {
@@ -125,16 +98,16 @@ export class UserResolver {
 
   @FieldResolver(() => [Post])
   async posts(@Root() user: User): Promise<Post[]> {
-    return postLoader.load(user.id);
+    return postsLoaderByUserId.load(user.id);
   }
 
   @FieldResolver(() => [PostLike])
   async postLikes(@Root() user: User): Promise<PostLike[]> {
-    return postLikesLoader.load(user.id);
+    return postLikesLoaderByUserId.load(user.id);
   }
 
   @FieldResolver(() => [PostComment])
   async postComments(@Root() user: User): Promise<PostComment[]> {
-    return postCommentsLoader.load(user.id);
+    return postCommentsLoaderByUserId.load(user.id);
   }
 }
