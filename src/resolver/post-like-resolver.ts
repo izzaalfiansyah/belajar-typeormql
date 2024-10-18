@@ -36,7 +36,7 @@ export class PostLikeResolver {
     const res = await PostLike.save(postLike);
 
     if (!!res) {
-      ctx.pubSub.publish("POST_LIKED", res);
+      await ctx.pubSub.publish("POST_LIKED", res);
     }
 
     return !!res;

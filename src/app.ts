@@ -2,17 +2,14 @@ import express from "express";
 import cors from "cors";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
-import { getSchema } from "./utils/graphql";
+import { getSchema, pubSub } from "./utils/graphql";
 import session from "express-session";
 import { redis } from "./utils/redis";
 import RedisStore from "connect-redis";
 import { User } from "./entity/user";
-import { PubSub } from "graphql-subscriptions";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
-
-export const pubSub = new PubSub();
 
 export async function runApp() {
   const app = express();
@@ -67,6 +64,7 @@ export async function runApp() {
 
   const ws = new WebSocketServer({
     server: http,
+    path: "/graphql",
   });
 
   useServer({ schema }, ws);
