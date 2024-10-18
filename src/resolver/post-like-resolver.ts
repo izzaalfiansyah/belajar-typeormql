@@ -29,17 +29,16 @@ export class PostLikeResolver {
       return false;
     }
 
-    const postLike = new PostLike();
-    postLike.user = user;
-    postLike.post = post;
+    const postLike = await PostLike.save({
+      user,
+      post,
+    });
 
-    const res = await PostLike.save(postLike);
-
-    if (!!res) {
-      await ctx.pubSub.publish("POST_LIKED", res);
+    if (!!postLike) {
+      ctx.pubSub.publish("POST_LIKED", postLike);
     }
 
-    return !!res;
+    return !!postLike;
   }
 
   @Mutation((returns) => Boolean)

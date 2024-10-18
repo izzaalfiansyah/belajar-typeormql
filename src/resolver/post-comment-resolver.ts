@@ -1,4 +1,12 @@
-import { Arg, FieldResolver, Mutation, Resolver, Root } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  FieldResolver,
+  Mutation,
+  Resolver,
+  Root,
+  Subscription,
+} from "type-graphql";
 import { PostComment } from "../entity/post-comment";
 import { Post } from "../entity/post";
 import DataLoader from "dataloader";
@@ -6,6 +14,7 @@ import { PostCommentInput } from "./args/post-comment-args";
 import { User } from "../entity/user";
 import { postLoader } from "./loader/post-loader";
 import { userLoader } from "./loader/user-loader";
+import { AppContext } from "../types/app-context";
 
 const childrenLoader = new DataLoader(async (parentIds) => {
   const comments = await PostComment.createQueryBuilder("comment")
@@ -30,7 +39,10 @@ const parentLoader = new DataLoader(async (parentIds) => {
 @Resolver(() => PostComment)
 export class PostCommentResolver {
   @Mutation(() => Boolean)
-  async commentPost(@Arg("input") input: PostCommentInput): Promise<boolean> {
+  async commentPost(
+    @Arg("input") input: PostCommentInput,
+    @Ctx() ctx: AppContext
+  ): Promise<boolean> {
     const post = await Post.createQueryBuilder("post")
       .where("post.id = :id", { id: input.postId })
       .getOne();
@@ -50,6 +62,10 @@ export class PostCommentResolver {
       parent: parent!,
       post: post!,
     });
+
+    if (!!postComment) {
+      ctx.pubSub.publish("POST_COMMENTED", postComment);
+    }
 
     return !!postComment;
   }
@@ -81,5 +97,12 @@ export class PostCommentResolver {
   @FieldResolver(() => PostComment, { nullable: true })
   async parent(@Root() comment: PostComment): Promise<PostComment | undefined> {
     return parentLoader.load(comment.parentId);
+  }
+
+  @Subscription(() => PostComment, {
+    topics: "POST_COMMENTED",
+  })
+  async postCommented(@Root() comment: PostComment) {
+    return Comment;
   }
 }

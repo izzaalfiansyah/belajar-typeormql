@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { User } from "../entity/user";
-import { pubSub } from "../app";
+import { pubSub } from "../utils/graphql";
 
 export interface AppContext {
   req: Request;
