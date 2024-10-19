@@ -15,6 +15,8 @@ import { PostComment } from "../entity/post-comment";
 import { userLoader } from "./loader/user-loader";
 import { postLikesLoaderByPostId } from "./loader/post-likes-loader";
 import { postCommentsLoaderByPostId } from "./loader/post-comments-loader";
+import { redis } from "../utils/redis";
+import CACHE from "../types/redis-types";
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -33,11 +35,19 @@ export class PostResolver {
 
   @Query((returns) => Post)
   async post(@Arg("id") id: number): Promise<Post | null> {
+    const cachePost = await redis.get(CACHE.POST(id));
+
+    if (!!cachePost) {
+      return JSON.parse(cachePost);
+    }
+
     const post = await Post.findOne({
       where: {
         id,
       },
     });
+
+    await redis.set(CACHE.POST(id), JSON.stringify(post), "EX", 60 * 60);
 
     return post;
   }
@@ -62,6 +72,8 @@ export class PostResolver {
   async deletePost(@Arg("id") id: number): Promise<boolean> {
     const res = Post.delete({ id });
 
+    await redis.del(CACHE.POST(id));
+
     return !!res;
   }
 
@@ -76,6 +88,8 @@ export class PostResolver {
       }
     );
 
+    await redis.del(CACHE.POST(id));
+
     return !!res;
   }
 
@@ -89,6 +103,8 @@ export class PostResolver {
         isPublished: false,
       }
     );
+
+    await redis.del(CACHE.POST(id));
 
     return !!res;
   }

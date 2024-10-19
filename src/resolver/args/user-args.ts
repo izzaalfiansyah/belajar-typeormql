@@ -16,7 +16,10 @@ export class UserInput {
   @Field()
   @IsEmail()
   email: string;
+}
 
+@InputType()
+export class UserInputWithPassword extends UserInput {
   @Field()
   // @IsStrongPassword()
   password: string;

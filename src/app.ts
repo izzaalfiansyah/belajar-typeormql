@@ -10,6 +10,7 @@ import { User } from "./entity/user";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
+import CACHE from "./types/redis-types";
 
 const port = process.env.APP_PORT || 8080;
 export const baseUrl = "http://localhost:" + port;
@@ -48,9 +49,25 @@ export async function runApp() {
     express.json(),
     expressMiddleware(apolloServer, {
       context: async ({ req, res }) => {
-        const user = await User.findOne({
-          where: { id: (req.session as any).userId },
-        });
+        const userCache = await redis.get(CACHE.PROFILE);
+
+        let user: User | null;
+        const userId = (req.session as any).userId;
+
+        if (userId) {
+          if (!!userCache) {
+            user = JSON.parse(userCache);
+          } else {
+            user = await User.findOne({
+              where: { id: (req.session as any).userId },
+            });
+
+            await redis.set(CACHE.PROFILE, JSON.stringify(user));
+          }
+        } else {
+          await redis.del(CACHE.PROFILE);
+          user = null;
+        }
 
         return {
           req,

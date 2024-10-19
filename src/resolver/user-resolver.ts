@@ -8,7 +8,7 @@ import {
   Root,
 } from "type-graphql";
 import { User } from "../entity/user";
-import { UserInput, UserArgs } from "./args/user-args";
+import { UserInput, UserArgs, UserInputWithPassword } from "./args/user-args";
 import { Post } from "../entity/post";
 import { PostLike } from "../entity/post-like";
 import { PostComment } from "../entity/post-comment";
@@ -45,7 +45,9 @@ export class UserResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async registerUser(@Arg("input") input: UserInput): Promise<boolean> {
+  async registerUser(
+    @Arg("input") input: UserInputWithPassword
+  ): Promise<boolean> {
     const password = await bcrypt.hash(input.password, 12);
 
     const user = await User.save({
