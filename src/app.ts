@@ -11,9 +11,11 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 
+const port = process.env.APP_PORT || 8080;
+export const baseUrl = "http://localhost:" + port;
+
 export async function runApp() {
   const app = express();
-  const port = process.env.APP_PORT || 8080;
 
   app.use(cors());
 
@@ -59,6 +61,23 @@ export async function runApp() {
       },
     }) as any
   );
+
+  app.get("/user/verify/:token", async (req, res) => {
+    const id = await redis.get(req.params.token);
+
+    if (id) {
+      const user = await User.findOne({ where: { id: parseInt(id) } });
+
+      if (user) {
+        user.isVerified = true;
+        await user.save();
+        res.send("Your account has been verified.");
+        return;
+      }
+    }
+
+    res.send("Verify account failed.");
+  });
 
   const http = createServer(app);
 

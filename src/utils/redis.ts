@@ -1,7 +1,5 @@
-import { createClient } from "redis";
+import Redis from "ioredis";
 
-export const redis = createClient();
-
-redis.connect().catch((err) => {
-  console.log(err);
+export const redis = new Redis({
+  maxRetriesPerRequest: null,
 });

@@ -43,11 +43,11 @@ export class PostResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async createPost(@Arg("postInput") props: PostInput): Promise<boolean> {
+  async createPost(@Arg("input") props: PostInput): Promise<boolean> {
     const user = await User.findOneBy({ id: props.userId });
 
     if (!user) {
-      return false;
+      throw new Error("user not found");
     }
 
     const post = await Post.save({

@@ -15,6 +15,8 @@ import { PostComment } from "../entity/post-comment";
 import { postsLoaderByUserId } from "./loader/post-loader";
 import { postLikesLoaderByUserId } from "./loader/post-likes-loader";
 import { postCommentsLoaderByUserId } from "./loader/post-comments-loader";
+import { sendEmailToUserQueue } from "../queue/user-queue";
+import bcrypt from "bcrypt";
 
 @Resolver(() => User)
 export class UserResolver {
@@ -43,11 +45,17 @@ export class UserResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async registerUser(@Arg("input") props: UserInput): Promise<boolean> {
+  async registerUser(@Arg("input") input: UserInput): Promise<boolean> {
+    const password = await bcrypt.hash(input.password, 12);
+
     const user = await User.save({
-      name: props.name,
-      email: props.email,
-      password: props.password,
+      name: input.name,
+      email: input.email,
+      password,
+    });
+
+    await sendEmailToUserQueue.add("sendEmailToUser", {
+      ...user,
     });
 
     return !!user;
