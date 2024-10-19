@@ -17,6 +17,8 @@ import { postLikesLoaderByUserId } from "./loader/post-likes-loader";
 import { postCommentsLoaderByUserId } from "./loader/post-comments-loader";
 import { sendEmailToUserQueue } from "../queue/user-queue";
 import bcrypt from "bcrypt";
+import { redis } from "../utils/redis";
+import CACHE from "../types/redis-types";
 
 @Resolver(() => User)
 export class UserResolver {
@@ -36,10 +38,20 @@ export class UserResolver {
   }
 
   @Query((returns) => User)
-  async user(@Arg("id") id: number, @Root() post: Post): Promise<User | null> {
+  async user(@Arg("id") id: number): Promise<User | null> {
+    const userCache = await redis.get(CACHE.USER(id));
+
+    if (!!userCache) {
+      return JSON.parse(userCache);
+    }
+
     const user = await User.findOne({
       where: { id },
     });
+
+    if (!!user) {
+      await redis.set(CACHE.USER(id), JSON.stringify(user), "EX", 60 * 60);
+    }
 
     return user;
   }
@@ -79,6 +91,8 @@ export class UserResolver {
 
     const res = await User.save(user);
 
+    await redis.set(CACHE.USER(id), JSON.stringify(user), "EX", 60 * 60);
+
     return !!res;
   }
 
@@ -87,6 +101,8 @@ export class UserResolver {
     const res = await User.delete({
       id,
     });
+
+    await redis.del(CACHE.USER(id));
 
     return !!res;
   }
@@ -102,6 +118,8 @@ export class UserResolver {
     user.isVerified = true;
 
     const res = await User.save(user);
+
+    await redis.del(CACHE.USER(id));
 
     return !!res;
   }
