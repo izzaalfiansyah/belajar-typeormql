@@ -12,29 +12,46 @@ export const sendEmailToUserQueue = new Queue<{
   connection: redis,
 });
 
-new Worker(
+const sendEmailToUserWorker = new Worker(
   "sendEmailToUser",
   async (job: Job) => {
     const { email, name, id } = job.data;
 
+    console.log("generating token");
+    await job.updateProgress(20);
+
     const token = uuid();
-    console.log(id);
     await redis.set(token, id, "EX", 60 * 60 * 24);
 
-    mail.sendMail({
-      subject: "Verify Your Account",
-      to: email,
-      from: "dev@admin.com",
-      html:
-        `<html>` +
-        `<body>` +
-        `<div>` +
-        `Hello ${name}! Please verify yout account by clicking ` +
-        `<a href="${baseUrl}/user/verify/${token}" target="_blank">this link</a>.` +
-        `</div>` +
-        `</body>` +
-        `</html>`,
-    });
+    console.log("token has been generated");
+    console.log("sending email to user");
+    await job.updateProgress(60);
+
+    try {
+      await mail.sendMail({
+        subject: "Verify Your Account",
+        to: email,
+        from: "dev@admin.com",
+        html:
+          `<html>` +
+          `<body>` +
+          `<div>` +
+          `Hello ${name}! Please verify yout account by clicking ` +
+          `<a href="${baseUrl}/user/verify/${token}" target="_blank">this link</a>.` +
+          `</div>` +
+          `</body>` +
+          `</html>`,
+      });
+
+      console.log("email has sended");
+      await job.updateProgress(100);
+    } catch (e) {
+      throw new Error("email not sended");
+    }
   },
   { connection: redis }
 );
+
+sendEmailToUserWorker.on("failed", (job, err) => {
+  console.log(err);
+});
