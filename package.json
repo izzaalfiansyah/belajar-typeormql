@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vite-plugin-vue2": "^2.0.3",
+    "@iconify-json/mdi": "^1.2.1",
+    "unocss": "^0.63.4",
     "vue": "^2.7.16",
-    "vuetify": "^2.7.2"
+    "vue-router": "^3.6.5",
+    "vuetify": "^2.7.2",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue2": "^2.3.1",
