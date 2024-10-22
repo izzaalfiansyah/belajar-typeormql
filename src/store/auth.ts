@@ -1,6 +1,6 @@
 import Vuex from "vuex";
 
-export const auth: Vuex.StoreOptions<unknown> = {
+export const authStore: Vuex.StoreOptions<unknown> = {
   state: () => {
     return {
       user: "Alfiansyah",

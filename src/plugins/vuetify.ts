@@ -5,4 +5,4 @@ import "vuetify/dist/vuetify.min.css";
 
 Vue.use(Vuetify);
 
-export default new Vuetify({});
+export const vuetify = new Vuetify({});
