@@ -3,10 +3,10 @@ import App from "./App.vue";
 import { vuetify } from "./plugins/vuetify";
 import { router } from "./plugins/routes";
 import { store } from "./plugins/store";
-
-import "virtual:uno.css";
 import { DefaultApolloClient } from "@vue/apollo-composable";
 import { apollo } from "./plugins/apollo";
+
+import "virtual:uno.css";
 
 new Vue({
   setup() {

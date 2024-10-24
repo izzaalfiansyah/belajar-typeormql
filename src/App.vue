@@ -1,20 +1,26 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+import { provideApolloClient, useQuery } from "@vue/apollo-composable";
+import { apollo } from "./plugins/apollo";
 import { gql } from "@apollo/client/core";
-import { useQuery } from "@vue/apollo-composable";
-import { watch } from "vue";
+import { onMounted } from "vue";
 
-const GET_USERS = gql`
-  query getUsers {
-    users {
+provideApolloClient(apollo);
+
+const ME_QUERY = gql`
+  query Me {
+    profile {
       name
+      email
     }
   }
 `;
 
-const { result } = useQuery(GET_USERS);
+const { result } = useQuery(ME_QUERY);
 
-watch(result, (res) => {
-  console.log(res);
+onMounted(() => {
+  setTimeout(() => {
+    console.log(result.value);
+  }, 5000);
 });
 </script>
 
