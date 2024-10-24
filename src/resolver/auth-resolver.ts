@@ -7,29 +7,33 @@ import { sendEmailToUserQueue } from "../queue/user-queue";
 import { redis } from "../utils/redis";
 import { UserInput } from "./args/user-args";
 import CACHE from "../types/redis-types";
+import { v4 as uuid } from "uuid";
 
 export class AuthResolver {
-  @Mutation(() => Boolean)
+  @Mutation(() => String, { nullable: true })
   async login(
     @Arg("input") input: LoginInput,
     @Ctx() ctx: AppContext
-  ): Promise<boolean> {
+  ): Promise<String | null> {
     const user = await User.findOne({ where: { email: input.email } });
 
     if (!user) {
-      return false;
+      return null;
     }
 
     const isValid = await bcrypt.compare(input.password, user.password);
 
     if (!isValid) {
-      return false;
+      return null;
     }
+
+    const token = uuid();
+    await redis.set(token, user.id, "EX", 60 * 60 * 24 * 7);
 
     (ctx.req.session as any).userId = user.id;
     await redis.set(CACHE.PROFILE, JSON.stringify(user));
 
-    return true;
+    return token;
   }
 
   @Authorized()

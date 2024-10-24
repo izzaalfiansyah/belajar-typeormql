@@ -49,24 +49,27 @@ export async function runApp() {
     express.json(),
     expressMiddleware(apolloServer, {
       context: async ({ req, res }) => {
+        const token = req.headers.authorization?.replace("Bearer ", "");
         const userCache = await redis.get(CACHE.PROFILE);
 
-        let user: User | null;
-        const userId = (req.session as any).userId;
+        let user: User | null = null;
 
-        if (userId) {
-          if (!!userCache) {
-            user = JSON.parse(userCache);
+        if (!!token) {
+          const userId = await redis.get(token);
+
+          if (!!userId) {
+            if (!!userCache) {
+              user = JSON.parse(userCache);
+            } else {
+              user = await User.findOne({
+                where: { id: parseInt(userId) },
+              });
+
+              await redis.set(CACHE.PROFILE, JSON.stringify(user));
+            }
           } else {
-            user = await User.findOne({
-              where: { id: (req.session as any).userId },
-            });
-
-            await redis.set(CACHE.PROFILE, JSON.stringify(user));
+            await redis.del(CACHE.PROFILE);
           }
-        } else {
-          await redis.del(CACHE.PROFILE);
-          user = null;
         }
 
         return {

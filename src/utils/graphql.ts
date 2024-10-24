@@ -18,8 +18,8 @@ export const getSchema = async () => {
       AuthResolver,
     ],
     pubSub: pubSub,
-    authChecker: async ({ context: { req } }) => {
-      if (!req.session.userId) {
+    authChecker: async ({ context: { user } }) => {
+      if (!user) {
         return false;
       }
 
