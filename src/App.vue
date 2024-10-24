@@ -1,26 +1,34 @@
 <script setup lang="ts">
 import { provideApolloClient, useQuery } from "@vue/apollo-composable";
-import { apollo } from "./plugins/apollo";
+import { apolloClient } from "./plugins/apollo";
 import { gql } from "@apollo/client/core";
-import { onMounted } from "vue";
+import { watch } from "vue";
+import { store } from "./plugins/store";
+import { router } from "./plugins/routes";
 
-provideApolloClient(apollo);
+provideApolloClient(apolloClient);
 
 const ME_QUERY = gql`
   query Me {
     profile {
+      id
       name
       email
+      isVerified
     }
   }
 `;
 
-const { result } = useQuery(ME_QUERY);
+const { result, onError } = useQuery(ME_QUERY);
 
-onMounted(() => {
-  setTimeout(() => {
-    console.log(result.value);
-  }, 5000);
+watch(result, (res) => {
+  if (!!res.profile) {
+    store.commit("setUser", res.profile);
+  }
+});
+
+onError((_) => {
+  router.replace("/login");
 });
 </script>
 
