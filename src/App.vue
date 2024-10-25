@@ -1,34 +1,33 @@
 <script setup lang="ts">
-import { provideApolloClient, useQuery } from "@vue/apollo-composable";
+import { provideApolloClient } from "@vue/apollo-composable";
 import { apolloClient } from "./plugins/apollo";
-import { gql } from "@apollo/client/core";
-import { watch } from "vue";
+import { onMounted } from "vue";
 import { store } from "./plugins/store";
 import { router } from "./plugins/routes";
 
 provideApolloClient(apolloClient);
 
-const ME_QUERY = gql`
-  query Me {
-    profile {
-      id
-      name
-      email
-      isVerified
-    }
+function isAuthPath(): boolean {
+  const path = router.currentRoute.fullPath;
+  return path.includes("login") || path.includes("register");
+}
+
+function checkUser() {
+  const user = store.state.auth.user;
+
+  if (!user && !isAuthPath()) {
+    router.replace("/login");
   }
-`;
 
-const { result, onError } = useQuery(ME_QUERY);
-
-watch(result, (res) => {
-  if (!!res.profile) {
-    store.commit("setUser", res.profile);
+  if (!!user && isAuthPath()) {
+    router.replace("/");
   }
-});
+}
 
-onError((_) => {
-  router.replace("/login");
+onMounted(() => {
+  store.commit("checkUser", () => {
+    checkUser();
+  });
 });
 </script>
 

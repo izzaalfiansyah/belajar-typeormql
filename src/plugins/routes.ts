@@ -19,4 +19,5 @@ const routes: RouteConfig[] = [
 
 export const router = new VueRouter({
   routes,
+  mode: "history",
 });

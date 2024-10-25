@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { useMutation } from "@vue/apollo-composable";
-import { gql } from "@apollo/client/core";
 import { ref } from "vue";
-import { router } from "../../plugins/routes";
-import { Token } from "../../utils/token";
+import { store } from "../../plugins/store";
 
 const req = ref<{
   email: string;
@@ -16,36 +13,11 @@ const req = ref<{
 const showPassword = ref(false);
 const toggleShowPassword = () => (showPassword.value = !showPassword.value);
 
-const LOGIN_QUERY = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(input: { email: $email, password: $password })
-  }
-`;
-
-const { mutate: loginMutation } = useMutation(LOGIN_QUERY, {
-  variables: {
-    email: req.value.email,
-    password: req.value.password,
-  },
-});
-
 async function handleLogin() {
-  const res = await loginMutation({
+  store.commit("login", {
     email: req.value.email,
     password: req.value.password,
   });
-
-  const token = res?.data.login;
-
-  if (!!token) {
-    alert("Successfully logged in");
-    console.log(token);
-    Token.set(token);
-
-    router.replace("/");
-  } else {
-    alert("Email or password wrong");
-  }
 }
 </script>
 

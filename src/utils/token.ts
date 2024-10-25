@@ -1,7 +1,7 @@
 export class Token {
   static key: string = "APP_TOKEN";
 
-  static set(val: string) {
+  static async set(val: string) {
     localStorage.setItem(this.key, val);
   }
 
