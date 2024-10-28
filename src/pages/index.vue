@@ -1,5 +1,7 @@
+<script lang="ts" setup>
+import Posts from "../components/posts.vue";
+</script>
+
 <template>
-  <div>
-    {{ JSON.stringify($store.state.auth.user) }}
-  </div>
+  <Posts></Posts>
 </template>

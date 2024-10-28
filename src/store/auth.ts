@@ -60,6 +60,8 @@ export const authStore: Module<
       if (!!token) {
         await Token.set(token);
         window.location.reload();
+      } else {
+        alert("wrong email or password");
       }
     },
   },
