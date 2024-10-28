@@ -1,11 +1,13 @@
 import {
   Arg,
   Args,
+  Ctx,
   FieldResolver,
   Mutation,
   Query,
   Resolver,
   Root,
+  Subscription,
 } from "type-graphql";
 import { Post } from "../entity/post";
 import { PostArgs, PostInput } from "./args/post-args";
@@ -17,6 +19,7 @@ import { postLikesLoaderByPostId } from "./loader/post-likes-loader";
 import { postCommentsLoaderByPostId } from "./loader/post-comments-loader";
 import { redis } from "../utils/redis";
 import CACHE from "../types/redis-types";
+import { AppContext } from "../types/app-context";
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -28,6 +31,9 @@ export class PostResolver {
 
     const posts = await Post.find({
       where,
+      order: {
+        id: "desc",
+      },
     });
 
     return posts;
@@ -53,7 +59,10 @@ export class PostResolver {
   }
 
   @Mutation((returns) => Boolean)
-  async createPost(@Arg("input") props: PostInput): Promise<boolean> {
+  async createPost(
+    @Arg("input") props: PostInput,
+    @Ctx() { pubSub }: AppContext
+  ): Promise<boolean> {
     const user = await User.findOneBy({ id: props.userId });
 
     if (!user) {
@@ -64,6 +73,8 @@ export class PostResolver {
       ...props,
       user: user,
     });
+
+    pubSub.publish("POST_ADDED", post);
 
     return !!post;
   }
@@ -122,5 +133,12 @@ export class PostResolver {
   @FieldResolver(() => [PostComment])
   async comments(@Root() post: Post): Promise<PostComment[]> {
     return postCommentsLoaderByPostId.load(post.id);
+  }
+
+  @Subscription(() => Post, {
+    topics: ["POST_ADDED"],
+  })
+  async postAdded(@Root() post: Post): Promise<Post> {
+    return post;
   }
 }
