@@ -13,6 +13,20 @@ export const authStore: Module<
   state: () => ({
     user: null,
   }),
+  getters: {
+    userNameProfile(state) {
+      if (state.user) {
+        const name = state.user.name
+          .split(" ")
+          .map((n) => n[0].toUpperCase())
+          .join()
+          .substring(0, 2);
+        return name;
+      }
+
+      return "??";
+    },
+  },
   mutations: {
     async checkUser(state, callback) {
       const PROFILE_QUERY = gql`

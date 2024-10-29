@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { gql } from "@apollo/client/core";
 import { useQuery } from "@vue/apollo-composable";
+import { watch } from "vue";
+import { store } from "../plugins/store";
 
 const GET_POST = gql`
   query getPosts {
@@ -15,12 +17,18 @@ const GET_POST = gql`
 `;
 
 const { result } = useQuery(GET_POST);
+
+watch(result, () => {
+  if (result.value?.posts) {
+    store.state.post.posts = result.value.posts;
+  }
+});
 </script>
 
 <template>
   <div>
     <v-card
-      v-for="post in result?.posts"
+      v-for="post in $store.state.post.posts"
       elevation="0"
       class="un:border-solid !un:border-gray-200 un:mb-3"
     >
@@ -28,7 +36,7 @@ const { result } = useQuery(GET_POST);
       <v-card-text>
         {{ post.content }}
       </v-card-text>
-      <v-card-actions>
+      <!-- <v-card-actions>
         <v-row>
           <v-col>
             <v-btn sm color="primary" class="un:w-full" text>LIKE</v-btn>
@@ -37,7 +45,7 @@ const { result } = useQuery(GET_POST);
             <v-btn sm class="un:w-full" text>COMMENT</v-btn>
           </v-col>
         </v-row>
-      </v-card-actions>
+      </v-card-actions> -->
     </v-card>
   </div>
 </template>
