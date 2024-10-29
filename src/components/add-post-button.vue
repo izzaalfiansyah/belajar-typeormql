@@ -6,8 +6,19 @@ import { store } from "../plugins/store";
 
 const showModal = ref(false);
 const content = ref<string>("");
+const form = ref();
 
-const ADD_POST_QUERY = gql`
+const contentRules = [
+  (v: any) => {
+    if (!v) {
+      return "Please enter your content!";
+    }
+
+    return true;
+  },
+];
+
+const ADD_POST_MUTATION = gql`
   mutation addPost($content: String!, $userId: ID!) {
     createPost(
       input: {
@@ -20,18 +31,20 @@ const ADD_POST_QUERY = gql`
   }
 `;
 
-const { mutate } = useMutation(ADD_POST_QUERY);
+const { mutate } = useMutation(ADD_POST_MUTATION);
 
 async function addPost() {
-  const res = await mutate({
-    content: content.value,
-    userId: store.state.auth.user.id,
-  });
+  if (form.value.validate()) {
+    const res = await mutate({
+      content: content.value,
+      userId: store.state.auth.user.id,
+    });
 
-  if (res?.data?.createPost) {
-    alert("Successfully created post!");
-    content.value = "";
-    showModal.value = false;
+    if (res?.data?.createPost) {
+      alert("Successfully created post!");
+      content.value = "";
+      showModal.value = false;
+    }
   }
 }
 </script>
@@ -39,11 +52,11 @@ async function addPost() {
 <template>
   <div>
     <v-btn icon color="primary" @click="showModal = true">
-      <v-icon>i-mdi:plus</v-icon>
+      <div class="i-mdi:plus un:size-6"></div>
     </v-btn>
 
     <v-dialog v-model="showModal" width="500px">
-      <v-form @submit.prevent="addPost">
+      <v-form @submit.prevent="addPost" ref="form">
         <v-card>
           <v-card-title>Add New Post</v-card-title>
           <v-card-text>
@@ -52,6 +65,7 @@ async function addPost() {
               placeholder="Enter Your Content"
               filled
               v-model="content"
+              :rules="contentRules"
             ></v-text-field>
             <v-btn type="submit" class="un:w-full" color="primary"
               >Publish</v-btn

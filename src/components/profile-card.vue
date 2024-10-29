@@ -34,7 +34,7 @@ function handleLogout() {
           <div class="un:text-sm">{{ user.name }}</div>
         </div>
         <div class="un:mt-5 un:text-center">
-          <v-btn text @click="handleLogout">
+          <v-btn text @click="handleLogout" color="red">
             <v-icon>i-mdi:logout</v-icon>
             Logout
           </v-btn>

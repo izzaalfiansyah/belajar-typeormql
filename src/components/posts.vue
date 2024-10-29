@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { gql } from "@apollo/client/core";
-import { useQuery } from "@vue/apollo-composable";
+import { useQuery, useSubscription } from "@vue/apollo-composable";
 import { watch } from "vue";
 import { store } from "../plugins/store";
 
@@ -9,6 +9,7 @@ const GET_POST = gql`
     posts {
       user {
         name
+        id
       }
       title
       content
@@ -21,6 +22,28 @@ const { result } = useQuery(GET_POST);
 watch(result, () => {
   if (result.value?.posts) {
     store.state.post.posts = result.value.posts;
+  }
+});
+
+// subscription to new data post added
+const POST_ADDED_SUBS = gql`
+  subscription postAdded {
+    postAdded {
+      user {
+        name
+        id
+      }
+      title
+      content
+    }
+  }
+`;
+
+const { result: subs } = useSubscription(POST_ADDED_SUBS);
+
+watch(subs, () => {
+  if (subs.value?.postAdded) {
+    store.commit("postAdded", subs.value.postAdded);
   }
 });
 </script>

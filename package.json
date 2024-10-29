@@ -13,6 +13,7 @@
     "@iconify-json/mdi": "^1.2.1",
     "@vue/apollo-composable": "^4.2.1",
     "graphql": "^15.9.0",
+    "graphql-ws": "^5.16.0",
     "unocss": "^0.63.4",
     "vue": "^2.7.16",
     "vue-router": "^3.6.5",

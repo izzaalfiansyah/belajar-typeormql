@@ -15,8 +15,12 @@ export const postStore: Module<
     };
   },
   mutations: {
-    setPosts(state, data: Post[]) {
-      state.posts = data;
+    setPosts(state, posts: Post[]) {
+      state.posts = posts;
+    },
+    postAdded(state, post: Post) {
+      state.posts = [post, ...state.posts];
+      console.log(state.posts);
     },
   },
 };
