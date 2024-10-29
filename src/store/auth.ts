@@ -78,5 +78,9 @@ export const authStore: Module<
         alert("wrong email or password");
       }
     },
+    async logout(_) {
+      await Token.remove();
+      window.location.reload();
+    },
   },
 };

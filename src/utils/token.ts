@@ -8,4 +8,8 @@ export class Token {
   static get() {
     return localStorage.getItem(this.key);
   }
+
+  static async remove() {
+    localStorage.removeItem(this.key);
+  }
 }
